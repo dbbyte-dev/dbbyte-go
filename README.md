@@ -1,0 +1,62 @@
+# dbbyte-go
+
+Official Go SDK for the DBByte storage/CDN API.
+
+## Install
+
+```bash
+go get github.com/dbbyte-dev/dbbyte-go
+```
+
+## Usage
+
+```go
+dbb, err := dbbyte.New(dbbyte.ClientOptions{
+    APIKey: "dbk_...",
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+ctx := context.Background()
+
+uploaded, err := dbb.Objects.Upload(ctx, "my-bucket", dbbyte.UploadOptions{
+    Key:  "images/logo.png",
+    Body: fileBytes,
+})
+```
+
+See `examples/basic` for a fuller walkthrough.
+
+## Errors
+
+Every failed request returns a `*dbbyte.Error` with `Message`, `Status`,
+`Hint`, and `RetryAfter`. The API has no `code` field — don't rely on one.
+
+A `429` can mean two different things, and only one is retryable:
+
+- **Burst rate limit** — `RetryAfter` is set (seconds). Transient, safe to
+  retry after that delay.
+- **Plan API request quota exceeded** — `RetryAfter` is `0`. Retrying
+  immediately won't help until the billing period resets or the plan is
+  upgraded.
+
+Check `RetryAfter`, not the message text, to tell them apart.
+
+```go
+var dbErr *dbbyte.Error
+if errors.As(err, &dbErr) {
+    if dbErr.RetryAfter > 0 {
+        time.Sleep(time.Duration(dbErr.RetryAfter) * time.Second)
+        // retry
+    }
+}
+```
+
+## Base URL / gateway note
+
+By default the client talks to `https://api.dbbyte.com`. In production the
+Cloudflare Worker gateway in front of that host inserts `/api/v1` itself,
+so paths used internally by this SDK do **not** include `/v1`. If you point
+`BaseURL` at a Next.js dev server directly (bypassing the Worker), include
+`/api/v1` in `BaseURL` instead.
