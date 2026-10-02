@@ -1,6 +1,11 @@
 # dbbyte-go
 
-Official Go SDK for the DBByte storage/CDN API.
+Official Go SDK for the DBByte storage and Data APIs.
+
+The client exposes `Buckets`, `Objects`, `Data`, and `CDN` resources. Bucket
+management requires an account-level API key. See the [REST API reference](https://dbbyte.com/api-reference)
+and [OpenAPI specification](https://dbbyte.com/openapi.yaml) for operations,
+permissions, and response shapes.
 
 ## Install
 

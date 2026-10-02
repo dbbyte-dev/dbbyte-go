@@ -18,6 +18,9 @@ import "context"
 // DBByte is the top-level client. Construct with New.
 type DBByte struct {
 	client  *client
+	Buckets *BucketsResource
+	CDN     *CDNResource
+	Data    *DataResource
 	Objects *ObjectsResource
 }
 
@@ -30,6 +33,9 @@ func New(opts ClientOptions) (*DBByte, error) {
 	}
 	return &DBByte{
 		client:  c,
+		Buckets: &BucketsResource{client: c},
+		CDN:     &CDNResource{client: c},
+		Data:    &DataResource{client: c},
 		Objects: &ObjectsResource{client: c},
 	}, nil
 }

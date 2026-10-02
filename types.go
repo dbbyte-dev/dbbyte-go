@@ -1,17 +1,121 @@
 package dbbyte
 
+// DataRecord is a record returned by a published Data API.
+type DataRecord map[string]interface{}
+
+// Bucket is the public representation returned by bucket endpoints.
+type Bucket struct {
+	ID                string `json:"id"`
+	Name              string `json:"name"`
+	Slug              string `json:"slug"`
+	Region            string `json:"region"`
+	ReplicaCount      int    `json:"replicaCount"`
+	IsPublic          bool   `json:"isPublic"`
+	CDN               bool   `json:"cdn"`
+	VersioningEnabled bool   `json:"versioningEnabled"`
+	FileCount         int64  `json:"fileCount"`
+	Size              int64  `json:"size"`
+	IsDefault         bool   `json:"isDefault"`
+	CreatedAt         string `json:"createdAt"`
+	UpdatedAt         string `json:"updatedAt"`
+}
+
+// BucketListResponse contains the account's buckets.
+type BucketListResponse struct {
+	Buckets []Bucket `json:"buckets"`
+}
+
+// BucketResponse contains a bucket and optional create success flag.
+type BucketResponse struct {
+	Success bool   `json:"success,omitempty"`
+	Bucket  Bucket `json:"bucket"`
+}
+
+// CreateBucketOptions configures Buckets.Create.
+type CreateBucketOptions struct {
+	Name         string `json:"name"`
+	Region       string `json:"region"`
+	ReplicaCount int    `json:"replicaCount,omitempty"`
+	IsPublic     bool   `json:"isPublic,omitempty"`
+	CDN          bool   `json:"cdn,omitempty"`
+}
+
+// UpdateBucketOptions configures Buckets.Update. Pointer fields allow explicit false values.
+type UpdateBucketOptions struct {
+	VersioningEnabled *bool `json:"versioningEnabled,omitempty"`
+	IsPublic          *bool `json:"isPublic,omitempty"`
+	CDN               *bool `json:"cdn,omitempty"`
+}
+
+// BucketDeleteResponse is returned when a bucket is removed.
+type BucketDeleteResponse struct {
+	Success bool `json:"success"`
+}
+
+// DataQueryOptions configures Data.Get. Filters use exact string matches.
+type DataQueryOptions struct {
+	Fields  []string
+	Cursor  string
+	Limit   int
+	Filters map[string]string
+}
+
+// DataPage is one page from a published Data API.
+type DataPage struct {
+	Data       []DataRecord `json:"data"`
+	NextCursor *string      `json:"next_cursor"`
+}
+
+// DataRecordResponse wraps a created or updated record.
+type DataRecordResponse struct {
+	Data DataRecord `json:"data"`
+}
+
+// AppendTextResponse is returned by Data.AppendText.
+type AppendTextResponse struct {
+	Success            bool `json:"success"`
+	AppendedCharacters int  `json:"appendedCharacters"`
+}
+
+// DataDeleteResponse is returned by Data.Delete.
+type DataDeleteResponse struct {
+	Success bool `json:"success"`
+}
+
+// PurgeScope selects a file or whole-bucket CDN purge.
+type PurgeScope string
+
+const (
+	PurgeFile   PurgeScope = "file"
+	PurgeBucket PurgeScope = "bucket"
+)
+
+// PurgeOptions configures CDN.Purge. Path is required for file purges.
+type PurgeOptions struct {
+	Slug  string     `json:"slug"`
+	Scope PurgeScope `json:"scope"`
+	Path  string     `json:"path,omitempty"`
+}
+
+// PurgeResponse reports CDN purge results.
+type PurgeResponse struct {
+	Success bool     `json:"success"`
+	Purged  int      `json:"purged"`
+	Failed  []string `json:"failed"`
+}
+
 // HealthResponse mirrors GET /health.
 type HealthResponse struct {
-	Status        string            `json:"status"` // "ok" | "degraded"
-	Timestamp     string            `json:"timestamp"`
-	UptimeSeconds int               `json:"uptimeSeconds"`
-	Checks        HealthChecks      `json:"checks"`
-	ResponseTimeMs int              `json:"responseTimeMs"`
+	Status         string       `json:"status"` // "ok" | "degraded"
+	Timestamp      string       `json:"timestamp"`
+	UptimeSeconds  int          `json:"uptimeSeconds"`
+	Checks         HealthChecks `json:"checks"`
+	ResponseTimeMs int          `json:"responseTimeMs"`
 }
 
 type HealthChecks struct {
-	API      HealthCheckStatus     `json:"api"`
-	Database HealthDatabaseStatus  `json:"database"`
+	API      HealthCheckStatus    `json:"api"`
+	Database HealthDatabaseStatus `json:"database"`
 }
 
 type HealthCheckStatus struct {
@@ -65,11 +169,7 @@ type FileListItem struct {
 
 // ListObjectsOptions configures Objects.List.
 //
-// NOTE: as of the current API, Prefix filters on the storage-generated
-// `key` field (a timestamp-prefixed, slash-flattened server ID), not the
-// human-readable `name` you uploaded with. It will rarely match what you
-// expect - confirmed via round-trip testing against a real server. Treat
-// as unreliable until the backend filters on `name` instead.
+// Prefix filters by the uploaded, human-readable file name.
 type ListObjectsOptions struct {
 	Prefix string
 	Cursor string

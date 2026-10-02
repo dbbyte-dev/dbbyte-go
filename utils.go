@@ -16,3 +16,7 @@ func encodeKey(key string) string {
 	}
 	return strings.Join(segments, "/")
 }
+
+func encodeSegment(value string) string {
+	return url.PathEscape(value)
+}
