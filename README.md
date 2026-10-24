@@ -33,6 +33,26 @@ uploaded, err := dbb.Objects.Upload(ctx, "my-bucket", dbbyte.UploadOptions{
 
 See `examples/basic` for a fuller walkthrough.
 
+### Direct browser uploads
+
+`Objects.UploadURL` mints a short-lived link so a browser can upload straight
+to DBByte without your write API key ever reaching the frontend. Call it from
+your own server:
+
+```go
+link, err := dbb.Objects.UploadURL(ctx, "my-bucket", dbbyte.UploadURLOptions{
+    Name:        "song.mp3",
+    ContentType: "audio/mpeg",
+    Size:        5 * 1024 * 1024, // max bytes the link accepts (up to 50 MB)
+    ExpiresIn:   900,             // seconds; the server caps this at 3600
+})
+if err != nil {
+    log.Fatal(err)
+}
+// Hand link.URL, link.Method ("PUT") and link.Headers to the browser, which
+// sends the file bytes as the request body.
+```
+
 ## Errors
 
 Every failed request returns a `*dbbyte.Error` with `Message`, `Status`,
