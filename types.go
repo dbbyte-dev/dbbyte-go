@@ -188,6 +188,35 @@ type SignOptions struct {
 	ExpiresIn int // seconds; 0 means "not set"
 }
 
+// UploadURLOptions configures Objects.UploadURL.
+type UploadURLOptions struct {
+	// Name is the object name the upload will create (required, max 255
+	// characters, no slashes: buckets are flat).
+	Name string `json:"name"`
+	// ContentType, when set, must be sent as the Content-Type header on the
+	// browser's PUT.
+	ContentType string `json:"contentType,omitempty"`
+	// Size is the maximum size in bytes the link will accept (up to 50 MB).
+	// 0 means "not set", which allows up to the 50 MB limit.
+	Size int64 `json:"size,omitempty"`
+	// Overwrite allows the upload to replace an existing object with the
+	// same name.
+	Overwrite bool `json:"overwrite,omitempty"`
+	// ExpiresIn is the link lifetime in seconds. 0 means "not set" (server
+	// default of 900; the server caps it at 3600).
+	ExpiresIn int `json:"expiresIn,omitempty"`
+}
+
+// UploadURLResponse describes a short-lived upload link. Send a request
+// with Method to URL, adding Headers, with the file bytes as the body. The
+// write API key never reaches the browser.
+type UploadURLResponse struct {
+	URL       string            `json:"url"`
+	Method    string            `json:"method"`
+	Headers   map[string]string `json:"headers"`
+	ExpiresIn int               `json:"expiresIn"`
+}
+
 type SignedUrlResponse struct {
 	URL       string `json:"url"`
 	ExpiresIn int    `json:"expiresIn"`

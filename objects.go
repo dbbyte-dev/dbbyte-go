@@ -2,11 +2,12 @@ package dbbyte
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 )
 
 // ObjectsResource groups every object-level operation (upload, list,
-// download, delete, sign, versions) under one bucket-scoped namespace,
+// download, delete, sign, upload URLs, versions) under one bucket-scoped namespace,
 // matching the Node and Python SDKs.
 type ObjectsResource struct {
 	client *client
@@ -90,6 +91,21 @@ func (o *ObjectsResource) Sign(ctx context.Context, bucket, key string, opts Sig
 
 	var out SignedUrlResponse
 	if err := o.client.requestJSON(ctx, "POST", "/storage/"+bucket+"/sign/"+encodeKey(key), nil, body, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// UploadURL mints a short-lived upload link so a browser can PUT a file
+// straight to DBByte without the write API key reaching the frontend. Call
+// it from your own server and hand the returned URL to the browser.
+func (o *ObjectsResource) UploadURL(ctx context.Context, bucket string, opts UploadURLOptions) (*UploadURLResponse, error) {
+	if opts.Name == "" {
+		return nil, fmt.Errorf("dbbyte: UploadURLOptions.Name is required")
+	}
+
+	var out UploadURLResponse
+	if err := o.client.requestJSON(ctx, "POST", "/storage/"+bucket+"/upload-url", nil, opts, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
